@@ -92,8 +92,11 @@ export class GameScene extends Phaser.Scene {
             learner.observePlayer(
 
                 this.player.sprite.x,
+
                 this.player.sprite.y,
+
                 behavior,
+
                 delta
 
             );
@@ -101,10 +104,26 @@ export class GameScene extends Phaser.Scene {
             learner.update(
 
                 delta,
+
                 this.player.sprite.x,
+
                 this.player.sprite.y
 
             );
+
+        }
+
+        // انتقال المعرفة بين الـ NPCs
+        for (const teacher of this.learners) {
+
+            for (const student of this.learners) {
+
+                if (teacher === student)
+                    continue;
+
+                teacher.teach(student);
+
+            }
 
         }
 
