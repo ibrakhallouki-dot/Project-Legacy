@@ -1,7 +1,8 @@
 import Phaser from "phaser";
+
 import { Player } from "../entities/Player";
 import { Learner } from "../entities/Learner";
-import { MemorySystem } from "../systems/MemorySystem";
+import { BehaviorType } from "../core/Behavior";
 
 export class GameScene extends Phaser.Scene {
 
@@ -9,15 +10,11 @@ export class GameScene extends Phaser.Scene {
 
     private learners: Learner[] = [];
 
-    private memory!: MemorySystem;
-
     constructor() {
         super("GameScene");
     }
 
     create() {
-
-        this.memory = new MemorySystem();
 
         this.physics.world.setBounds(0, 0, 3000, 3000);
 
@@ -28,13 +25,17 @@ export class GameScene extends Phaser.Scene {
         graphics.lineStyle(1, 0x222222);
 
         for (let x = 0; x <= 3000; x += 64) {
+
             graphics.moveTo(x, 0);
             graphics.lineTo(x, 3000);
+
         }
 
         for (let y = 0; y <= 3000; y += 64) {
+
             graphics.moveTo(0, y);
             graphics.lineTo(3000, y);
+
         }
 
         graphics.strokePath();
@@ -65,13 +66,11 @@ export class GameScene extends Phaser.Scene {
 
                     this,
 
-                    Phaser.Math.Between(100, 2900),
-
-                    Phaser.Math.Between(100, 2900),
-
                     i,
 
-                    this.memory
+                    Phaser.Math.Between(100, 2900),
+
+                    Phaser.Math.Between(100, 2900)
 
                 )
 
@@ -85,6 +84,9 @@ export class GameScene extends Phaser.Scene {
 
         this.player.update();
 
+        const behavior: BehaviorType =
+            this.player.getBehavior();
+
         for (const learner of this.learners) {
 
             learner.observePlayer(
@@ -92,6 +94,8 @@ export class GameScene extends Phaser.Scene {
                 this.player.sprite.x,
 
                 this.player.sprite.y,
+
+                behavior,
 
                 delta
 
