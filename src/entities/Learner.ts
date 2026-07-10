@@ -1,125 +1,125 @@
 import Phaser from "phaser";
-import { MemorySystem, WorldSide } from "../systems/MemorySystem";
+
+import { BehaviorMemory, BehaviorType } from "../core/Behavior";
+import { ObservationSystem } from "../core/ObservationSystem";
 
 export class Learner {
 
-    public sprite: Phaser.GameObjects.Rectangle;
+    public readonly id: number;
 
-    private body: Phaser.Physics.Arcade.Body;
+    public readonly sprite: Phaser.GameObjects.Rectangle;
+
+    private readonly body: Phaser.Physics.Arcade.Body;
+
+    private readonly memory = new BehaviorMemory();
+
+    private readonly observation = new ObservationSystem();
 
     private direction = new Phaser.Math.Vector2();
 
-    private timer = 0;
-
-    private watching = 0;
-
-    private readonly id: number;
-
-    private readonly memory: MemorySystem;
+    private changeDirectionTimer = 0;
 
     constructor(
+
         scene: Phaser.Scene,
-        x: number,
-        y: number,
+
         id: number,
-        memory: MemorySystem
+
+        x: number,
+
+        y: number
+
     ) {
 
         this.id = id;
 
-        this.memory = memory;
-
-        this.memory.create(id);
-
         this.sprite = scene.add.rectangle(
+
             x,
+
             y,
+
             24,
+
             24,
+
             0x4da6ff
+
         );
 
         scene.physics.add.existing(this.sprite);
 
-        this.body =
-            this.sprite.body as Phaser.Physics.Arcade.Body;
+        this.body = this.sprite.body as Phaser.Physics.Arcade.Body;
 
         this.body.setCollideWorldBounds(true);
 
-        this.randomDirection();
+        this.pickRandomDirection();
 
     }
 
-    private randomDirection() {
+    private pickRandomDirection() {
 
-        const a =
-            Phaser.Math.FloatBetween(
-                0,
-                Math.PI * 2
-            );
+        const angle = Phaser.Math.FloatBetween(
+
+            0,
+
+            Math.PI * 2
+
+        );
 
         this.direction.set(
-            Math.cos(a),
-            Math.sin(a)
+
+            Math.cos(angle),
+
+            Math.sin(angle)
+
         );
 
     }
 
     observePlayer(
+
         playerX: number,
+
         playerY: number,
+
+        playerBehavior: BehaviorType,
+
         delta: number
+
     ) {
 
-        const d =
-            Phaser.Math.Distance.Between(
+        const distance = Phaser.Math.Distance.Between(
 
-                this.sprite.x,
-                this.sprite.y,
+            this.sprite.x,
 
-                playerX,
-                playerY
+            this.sprite.y,
 
-            );
+            playerX,
 
-        if (d < 180) {
+            playerY
 
-            this.watching += delta;
+        );
 
-            if (this.watching >= 3000) {
+        const canSee = distance < 180;
 
-                this.memory.learn(this.id);
+        this.observation.update(
 
-                this.memory.chooseWorld(this.id);
+            delta,
 
-                const data =
-                    this.memory.get(this.id);
+            canSee,
 
-                switch (data.world) {
+            playerBehavior,
 
-                    case WorldSide.Legacy:
+            0,
 
-                        this.sprite.setFillStyle(
-                            0x00ff66
-                        );
+            this.memory
 
-                        break;
+        );
 
-                    case WorldSide.Chaos:
+        if (this.memory.mastered(playerBehavior)) {
 
-                        this.sprite.setFillStyle(
-                            0xff3333
-                        );
-
-                        break;
-
-                }
-
-            }
-
-        } else {
-
-            this.watching = 0;
+            this.sprite.setFillStyle(0x00ff66);
 
         }
 
@@ -127,23 +127,31 @@ export class Learner {
 
     update(delta: number) {
 
-        this.timer += delta;
+        this.changeDirectionTimer += delta;
 
-        if (this.timer >= 1500) {
+        if (
 
-            this.timer = 0;
+            !this.memory.mastered(BehaviorType.Follow)
 
-            this.randomDirection();
+        ) {
+
+            if (this.changeDirectionTimer > 1500) {
+
+                this.changeDirectionTimer = 0;
+
+                this.pickRandomDirection();
+
+            }
+
+            this.body.setVelocity(
+
+                this.direction.x * 70,
+
+                this.direction.y * 70
+
+            );
 
         }
-
-        this.body.setVelocity(
-
-            this.direction.x * 70,
-
-            this.direction.y * 70
-
-        );
 
     }
 
