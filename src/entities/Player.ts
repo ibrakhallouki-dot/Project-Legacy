@@ -1,14 +1,21 @@
 import Phaser from "phaser";
+import { BehaviorType } from "../core/Behavior";
 
 export class Player {
 
-    public sprite: Phaser.GameObjects.Rectangle;
+    public readonly sprite: Phaser.GameObjects.Rectangle;
 
-    public body: Phaser.Physics.Arcade.Body;
+    private readonly body: Phaser.Physics.Arcade.Body;
 
-    private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
+    private readonly cursors: Phaser.Types.Input.Keyboard.CursorKeys;
 
-    constructor(scene: Phaser.Scene, x: number, y: number) {
+    private currentBehavior: BehaviorType = BehaviorType.Idle;
+
+    constructor(
+        scene: Phaser.Scene,
+        x: number,
+        y: number
+    ) {
 
         this.sprite = scene.add.rectangle(
             x,
@@ -34,23 +41,47 @@ export class Player {
 
         this.body.setVelocity(0);
 
+        this.currentBehavior = BehaviorType.Idle;
+
         if (this.cursors.left.isDown) {
+
             this.body.setVelocityX(-speed);
+
+            this.currentBehavior = BehaviorType.Walk;
+
         }
 
         else if (this.cursors.right.isDown) {
+
             this.body.setVelocityX(speed);
+
+            this.currentBehavior = BehaviorType.Walk;
+
         }
 
         if (this.cursors.up.isDown) {
+
             this.body.setVelocityY(-speed);
+
+            this.currentBehavior = BehaviorType.Walk;
+
         }
 
         else if (this.cursors.down.isDown) {
+
             this.body.setVelocityY(speed);
+
+            this.currentBehavior = BehaviorType.Walk;
+
         }
 
         this.body.velocity.normalize().scale(speed);
+
+    }
+
+    getBehavior(): BehaviorType {
+
+        return this.currentBehavior;
 
     }
 
