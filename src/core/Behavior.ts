@@ -1,17 +1,10 @@
 export enum BehaviorType {
-
     Idle = "idle",
-
     Walk = "walk",
-
     Run = "run",
-
     Follow = "follow",
-
     Ignore = "ignore",
-
     Teach = "teach"
-
 }
 
 export interface Behavior {
@@ -71,6 +64,30 @@ export class BehaviorMemory {
 
     }
 
+    importBehavior(source: Behavior) {
+
+        if (this.behaviors.has(source.type)) {
+
+            return;
+
+        }
+
+        this.behaviors.set(source.type, {
+
+            type: source.type,
+
+            confidence: source.confidence,
+
+            observations: source.observations,
+
+            mastered: source.mastered,
+
+            teacherId: source.teacherId
+
+        });
+
+    }
+
     knows(type: BehaviorType): boolean {
 
         return this.behaviors.has(type);
@@ -79,9 +96,7 @@ export class BehaviorMemory {
 
     mastered(type: BehaviorType): boolean {
 
-        const behavior = this.behaviors.get(type);
-
-        return behavior?.mastered ?? false;
+        return this.behaviors.get(type)?.mastered ?? false;
 
     }
 
