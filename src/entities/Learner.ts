@@ -20,31 +20,20 @@ export class Learner {
     private changeDirectionTimer = 0;
 
     constructor(
-
         scene: Phaser.Scene,
-
         id: number,
-
         x: number,
-
         y: number
-
     ) {
 
         this.id = id;
 
         this.sprite = scene.add.rectangle(
-
             x,
-
             y,
-
             24,
-
             24,
-
             0x4da6ff
-
         );
 
         scene.physics.add.existing(this.sprite);
@@ -60,54 +49,39 @@ export class Learner {
     private pickRandomDirection() {
 
         const angle = Phaser.Math.FloatBetween(
-
             0,
-
             Math.PI * 2
-
         );
 
         this.direction.set(
-
             Math.cos(angle),
-
             Math.sin(angle)
-
         );
 
     }
 
     observePlayer(
-
         playerX: number,
-
         playerY: number,
-
         playerBehavior: BehaviorType,
-
         delta: number
-
     ) {
 
         const distance = Phaser.Math.Distance.Between(
 
             this.sprite.x,
-
             this.sprite.y,
 
             playerX,
-
             playerY
 
         );
-
-        const canSee = distance < 180;
 
         this.observation.update(
 
             delta,
 
-            canSee,
+            distance < 180,
 
             playerBehavior,
 
@@ -117,7 +91,7 @@ export class Learner {
 
         );
 
-        if (this.memory.mastered(playerBehavior)) {
+        if (this.memory.mastered(BehaviorType.Walk)) {
 
             this.sprite.setFillStyle(0x00ff66);
 
@@ -125,33 +99,71 @@ export class Learner {
 
     }
 
-    update(delta: number) {
-
-        this.changeDirectionTimer += delta;
+    update(
+        delta: number,
+        playerX?: number,
+        playerY?: number
+    ) {
 
         if (
 
-            !this.memory.mastered(BehaviorType.Follow)
+            this.memory.mastered(BehaviorType.Walk)
+
+            &&
+
+            playerX !== undefined
+
+            &&
+
+            playerY !== undefined
 
         ) {
 
-            if (this.changeDirectionTimer > 1500) {
+            const dx = playerX - this.sprite.x;
 
-                this.changeDirectionTimer = 0;
+            const dy = playerY - this.sprite.y;
 
-                this.pickRandomDirection();
+            const length = Math.sqrt(dx * dx + dy * dy);
+
+            if (length > 2) {
+
+                this.body.setVelocity(
+
+                    dx / length * 90,
+
+                    dy / length * 90
+
+                );
 
             }
 
-            this.body.setVelocity(
+            else {
 
-                this.direction.x * 70,
+                this.body.setVelocity(0);
 
-                this.direction.y * 70
+            }
 
-            );
+            return;
 
         }
+
+        this.changeDirectionTimer += delta;
+
+        if (this.changeDirectionTimer > 1500) {
+
+            this.changeDirectionTimer = 0;
+
+            this.pickRandomDirection();
+
+        }
+
+        this.body.setVelocity(
+
+            this.direction.x * 70,
+
+            this.direction.y * 70
+
+        );
 
     }
 
