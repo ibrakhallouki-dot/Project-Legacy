@@ -2,6 +2,7 @@ import Phaser from "phaser";
 
 import { BehaviorMemory, BehaviorType } from "../core/Behavior";
 import { ObservationSystem } from "../core/ObservationSystem";
+import { KnowledgeTransfer } from "../core/KnowledgeTransfer";
 
 export class Learner {
 
@@ -15,9 +16,11 @@ export class Learner {
 
     private readonly observation = new ObservationSystem();
 
+    private readonly transfer = new KnowledgeTransfer();
+
     private direction = new Phaser.Math.Vector2();
 
-    private changeDirectionTimer = 0;
+    private directionTimer = 0;
 
     constructor(
         scene: Phaser.Scene,
@@ -61,10 +64,12 @@ export class Learner {
     }
 
     observePlayer(
+
         playerX: number,
         playerY: number,
         playerBehavior: BehaviorType,
         delta: number
+
     ) {
 
         const distance = Phaser.Math.Distance.Between(
@@ -91,41 +96,71 @@ export class Learner {
 
         );
 
-        if (this.memory.mastered(BehaviorType.Walk)) {
+    }
 
-            this.sprite.setFillStyle(0x00ff66);
+    teach(other: Learner) {
+
+        if (other.id === this.id)
+            return;
+
+        const distance = Phaser.Math.Distance.Between(
+
+            this.sprite.x,
+            this.sprite.y,
+
+            other.sprite.x,
+            other.sprite.y
+
+        );
+
+        if (distance > 80)
+            return;
+
+        if (this.transfer.transfer(
+            this.memory,
+            other.memory
+        )) {
+
+            other.sprite.setFillStyle(
+                0x00ff66
+            );
 
         }
 
     }
 
     update(
+
         delta: number,
-        playerX?: number,
-        playerY?: number
+
+        playerX: number,
+
+        playerY: number
+
     ) {
 
         if (
 
-            this.memory.mastered(BehaviorType.Walk)
-
-            &&
-
-            playerX !== undefined
-
-            &&
-
-            playerY !== undefined
+            this.memory.mastered(
+                BehaviorType.Walk
+            )
 
         ) {
 
-            const dx = playerX - this.sprite.x;
+            this.sprite.setFillStyle(
+                0x00ff66
+            );
 
-            const dy = playerY - this.sprite.y;
+            const dx =
+                playerX - this.sprite.x;
 
-            const length = Math.sqrt(dx * dx + dy * dy);
+            const dy =
+                playerY - this.sprite.y;
 
-            if (length > 2) {
+            const length =
+                Math.sqrt(dx * dx + dy * dy);
+
+            if (length > 5) {
 
                 this.body.setVelocity(
 
@@ -147,11 +182,11 @@ export class Learner {
 
         }
 
-        this.changeDirectionTimer += delta;
+        this.directionTimer += delta;
 
-        if (this.changeDirectionTimer > 1500) {
+        if (this.directionTimer > 1500) {
 
-            this.changeDirectionTimer = 0;
+            this.directionTimer = 0;
 
             this.pickRandomDirection();
 
