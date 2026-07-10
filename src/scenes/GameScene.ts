@@ -92,16 +92,19 @@ export class GameScene extends Phaser.Scene {
             learner.observePlayer(
 
                 this.player.sprite.x,
-
                 this.player.sprite.y,
-
                 behavior,
-
                 delta
 
             );
 
-            learner.update(delta);
+            learner.update(
+
+                delta,
+                this.player.sprite.x,
+                this.player.sprite.y
+
+            );
 
         }
 
