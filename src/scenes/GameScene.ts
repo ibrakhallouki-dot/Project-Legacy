@@ -1,9 +1,15 @@
 import Phaser from "phaser";
+import { Learner } from "../entities/Learner";
 
 export class GameScene extends Phaser.Scene {
 
     private player!: Phaser.GameObjects.Rectangle;
+
+    private playerBody!: Phaser.Physics.Arcade.Body;
+
     private cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
+
+    private learners: Learner[] = [];
 
     constructor() {
         super("GameScene");
@@ -11,13 +17,10 @@ export class GameScene extends Phaser.Scene {
 
     create() {
 
-        // حجم العالم
         this.physics.world.setBounds(0, 0, 3000, 3000);
 
-        // خلفية
         this.cameras.main.setBackgroundColor("#111111");
 
-        // رسم شبكة بسيطة
         const graphics = this.add.graphics();
 
         graphics.lineStyle(1, 0x222222);
@@ -34,58 +37,87 @@ export class GameScene extends Phaser.Scene {
 
         graphics.strokePath();
 
-        // اللاعب
-        this.player = this.add.rectangle(400, 300, 32, 32, 0x00ff66);
+        this.player = this.add.rectangle(
+            1500,
+            1500,
+            32,
+            32,
+            0x00ff66
+        );
 
         this.physics.add.existing(this.player);
 
-        const body = this.player.body as Phaser.Physics.Arcade.Body;
+        this.playerBody = this.player.body as Phaser.Physics.Arcade.Body;
 
-        body.setCollideWorldBounds(true);
+        this.playerBody.setCollideWorldBounds(true);
 
-        // الكاميرا
-        this.cameras.main.startFollow(this.player, true);
+        this.cameras.main.startFollow(this.player);
 
-        this.cameras.main.setBounds(0, 0, 3000, 3000);
+        this.cameras.main.setBounds(
+            0,
+            0,
+            3000,
+            3000
+        );
 
-        // لوحة المفاتيح
-        this.cursors = this.input.keyboard!.createCursorKeys();
+        this.cursors =
+            this.input.keyboard!.createCursorKeys();
+
+        for (let i = 0; i < 20; i++) {
+
+            const learner = new Learner(
+
+                this,
+
+                Phaser.Math.Between(100, 2900),
+
+                Phaser.Math.Between(100, 2900)
+
+            );
+
+            this.learners.push(learner);
+
+        }
 
     }
 
-    update() {
+    update(time: number, delta: number) {
 
-        const body = this.player.body as Phaser.Physics.Arcade.Body;
-
-        body.setVelocity(0);
+        this.playerBody.setVelocity(0);
 
         const speed = 220;
 
         if (this.cursors.left.isDown) {
 
-            body.setVelocityX(-speed);
+            this.playerBody.setVelocityX(-speed);
 
         }
 
         else if (this.cursors.right.isDown) {
 
-            body.setVelocityX(speed);
+            this.playerBody.setVelocityX(speed);
 
         }
 
         if (this.cursors.up.isDown) {
 
-            body.setVelocityY(-speed);
+            this.playerBody.setVelocityY(-speed);
 
         }
 
         else if (this.cursors.down.isDown) {
 
-            body.setVelocityY(speed);
+            this.playerBody.setVelocityY(speed);
 
         }
 
-        body.velocity.normalize().scale(speed);
+        this.playerBody.velocity.normalize().scale(speed);
+
+        for (const learner of this.learners) {
+
+            learner.update(delta);
+
+        }
 
     }
 
