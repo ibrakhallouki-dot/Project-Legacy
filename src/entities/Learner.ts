@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { MemorySystem, WorldSide } from "../systems/MemorySystem";
 
 export class Learner {
 
@@ -8,13 +9,27 @@ export class Learner {
 
     private direction = new Phaser.Math.Vector2();
 
-    private changeTimer = 0;
+    private timer = 0;
 
-    private observedTime = 0;
+    private watching = 0;
 
-    private learned = false;
+    private readonly id: number;
 
-    constructor(scene: Phaser.Scene, x: number, y: number) {
+    private readonly memory: MemorySystem;
+
+    constructor(
+        scene: Phaser.Scene,
+        x: number,
+        y: number,
+        id: number,
+        memory: MemorySystem
+    ) {
+
+        this.id = id;
+
+        this.memory = memory;
+
+        this.memory.create(id);
 
         this.sprite = scene.add.rectangle(
             x,
@@ -31,56 +46,80 @@ export class Learner {
 
         this.body.setCollideWorldBounds(true);
 
-        this.pickRandomDirection();
+        this.randomDirection();
 
     }
 
-    private pickRandomDirection() {
+    private randomDirection() {
 
-        const angle = Phaser.Math.FloatBetween(
-            0,
-            Math.PI * 2
-        );
+        const a =
+            Phaser.Math.FloatBetween(
+                0,
+                Math.PI * 2
+            );
 
         this.direction.set(
-            Math.cos(angle),
-            Math.sin(angle)
+            Math.cos(a),
+            Math.sin(a)
         );
 
     }
 
-    public observePlayer(
+    observePlayer(
         playerX: number,
         playerY: number,
         delta: number
     ) {
 
-        const distance = Phaser.Math.Distance.Between(
+        const d =
+            Phaser.Math.Distance.Between(
 
-            this.sprite.x,
-            this.sprite.y,
+                this.sprite.x,
+                this.sprite.y,
 
-            playerX,
-            playerY
+                playerX,
+                playerY
 
-        );
+            );
 
-        if (distance < 180) {
+        if (d < 180) {
 
-            this.observedTime += delta;
+            this.watching += delta;
 
-            if (!this.learned &&
-                this.observedTime > 3000) {
+            if (this.watching >= 3000) {
 
-                this.learned = true;
+                this.memory.learn(this.id);
 
-                this.sprite.setFillStyle(0xffcc00);
+                this.memory.chooseWorld(this.id);
+
+                const data =
+                    this.memory.get(this.id);
+
+                switch (data.world) {
+
+                    case WorldSide.Legacy:
+
+                        this.sprite.setFillStyle(
+                            0x00ff66
+                        );
+
+                        break;
+
+                    case WorldSide.Chaos:
+
+                        this.sprite.setFillStyle(
+                            0xff3333
+                        );
+
+                        break;
+
+                }
 
             }
 
         } else {
 
-            this.observedTime = 0;
+            this.watching = 0;
 
         }
 
@@ -88,17 +127,13 @@ export class Learner {
 
     update(delta: number) {
 
-        this.changeTimer += delta;
+        this.timer += delta;
 
-        if (!this.learned) {
+        if (this.timer >= 1500) {
 
-            if (this.changeTimer > 1500) {
+            this.timer = 0;
 
-                this.changeTimer = 0;
-
-                this.pickRandomDirection();
-
-            }
+            this.randomDirection();
 
         }
 
